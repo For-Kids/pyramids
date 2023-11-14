@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Пирамидки</title>
+    <link rel="icon" type="image/x-icon" href="favicon.png">
+
+    <style>
+        input {
+            width: 200px;
+            height: 150px;
+            font-size: 32px;
+            text-align: center;
+        }
+
+        button {
+            font-size: 32px;
+        }
+
+        .row {
+            display: flex;
+            justify-content: center;
+        }
+
+        .buttons {
+            margin: auto;
+            width: 600px;
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .result {
+            margin: auto;
+            width: 600px;
+            text-align: center;
+            font-size: 32px;
+        }
+
+        .hard {
+            margin: auto;
+            width: 600px;
+            text-align: center;
+            font-size: 22px;
+        }
+
+
+        @media only screen and (max-width: 950px) {
+            input {
+                width: 10vw;
+                height: 8vw;
+                font-size: 3vw;
+                text-align: center;
+            }
+
+            button {
+                font-size: 3vw;
+            }
+
+            .row {
+                display: flex;
+                justify-content: center;
+            }
+
+            .buttons {
+                margin: auto;
+                width: 50vw;
+                display: flex;
+                justify-content: space-around;
+            }
+
+            .result {
+                margin: auto;
+                width: 50vw;
+                text-align: center;
+                font-size: 4vw;
+            }
+
+            .hard {
+                margin: auto;
+                width: 90vw;
+                text-align: center;
+                font-size: 3vw;
+            }
+        }
+
+        @media only screen and (max-width: 650px) {
+            input {
+                width: 25vw;
+                height: 20vw;
+                font-size: 6vw;
+                text-align: center;
+            }
+
+            button {
+                font-size: 6vw;
+            }
+
+            .row {
+                display: flex;
+                justify-content: center;
+            }
+
+            .buttons {
+                margin: auto;
+                width: 90vw;
+                display: flex;
+                justify-content: space-around;
+            }
+
+            .result {
+                margin: auto;
+                width: 90vw;
+                text-align: center;
+                font-size: 6vw;
+            }
+
+            .hard {
+                margin: auto;
+                width: 90vw;
+                text-align: center;
+                font-size: 5vw;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="row">
+        <input type="number" id="c1" /> </td>
+    </div>
+    <div class="row">
+        <input type="number" id="c21" /></td>
+        <input type="number" id="c22" /></td>
+    </div>
+
+    <div class="row">
+        <td colspan="2" class="cell"><input type="number" id="c31" /></td>
+        <td colspan="2" class="cell"><input type="number" id="c32" /></td>
+        <td colspan="2" class="cell"><input type="number" id="c33" /></td>
+    </div>
+
+    <br>
+    <div class="buttons">
+        <button id="gen"> Генерирай </button>
+        <button id="check"> Провери </button>
+    </div>
+    <br>
+    <div class="hard" id="hard"></div>
+    <br>
+    <div class="result" id="result"></div>
+    <br>
+    <div class="hard">
+        <button onclick="saveRecord()">Запази своя рекорд</button>
+    </div>
+    <br>
+    <div class="hard" id="records"></div>
+
+
+    <script>
+
+        let record = sessionStorage.getItem('record') || 0;
+        let difficulty = Math.floor(record / 100) * 100 || 10;
+        let genBtn = document.querySelector('#gen');
+        let checkBtn = document.querySelector('#check');
+
+        let c1 = document.querySelector('#c1');
+        let c21 = document.querySelector('#c21');
+        let c22 = document.querySelector('#c22');
+        let c31 = document.querySelector('#c31');
+        let c32 = document.querySelector('#c32');
+        let c33 = document.querySelector('#c33');
+
+        let c1Val = null;
+        let c21Val = 0;
+        let c22Val = 0;
+        let c31Val = 0;
+        let c32Val = 0;
+        let c33Val = 0;
+
+        function saveRecord() {
+            let name = prompt("Въведи име");
+            if (name == null) return;
+            window.fetch('https://anestorov.com/mat/save.php?name=' + name + '&record=' + record).then(data => data.json()).then(data => {
+                showRedords(data);
+            });
+        }
+        function getRecords() {
+            window.fetch('https://anestorov.com/mat/save.php').then(data => data.json()).then(data => {
+                showRedords(data);
+            })
+        }
+        function showRedords(records) {
+            let html = '<table border="1" width="100%">';
+            html += '<tr><th>Име</th><th>Рекорд</th></tr>';
+            for (let i = 0; i < records.length; i++) {
+                html += '<tr><td>' + records[i].name + '</td><td>' + records[i].record + '</td></tr>';
+            }
+            html += '</table>';
+            document.querySelector('#records').innerHTML = html;
+        }
+
+        checkBtn.addEventListener("click", () => {
+            checkBtn.disabled = true;
+            setTimeout(() => {
+                document.querySelector('#result').innerHTML = '';
+                checkBtn.disabled = false;
+            }, 3000);
+
+            if (c1Val == null) {
+                document.querySelector('#result').innerHTML = "Натисни генерирай!";
+                document.querySelector('#result').style.color = "black";
+                return;
+            }
+            if (c1.value == c1Val && c21.value == c21Val && c22.value == c22Val && c31.value == c31Val && c32.value == c32Val && c33.value == c33Val) {
+                document.querySelector('#result').innerHTML = "Вярно!";
+                document.querySelector('#result').style.color = "green";
+
+                if (difficulty > record) record = difficulty;
+                sessionStorage.setItem('record', record);
+                difficulty += 10;
+                genBtn.click();
+            } else {
+                document.querySelector('#result').innerHTML = "Грешно!";
+                document.querySelector('#result').style.color = "red";
+                if (difficulty >= 5) difficulty -= 5;
+            }
+            document.querySelector('#hard').innerHTML = "Трудност: " + difficulty + " / Текущ рекорд: " + record;
+        })
+
+        genBtn.addEventListener("click", () => {
+            document.querySelector('#hard').innerHTML = "Трудност: " + difficulty + " / Текущ рекорд: " + record;
+
+            c1.value = '';
+            c21.value = '';
+            c22.value = '';
+            c31.value = '';
+            c32.value = '';
+            c33.value = '';
+
+            c1.disabled = false;
+            c21.disabled = false;
+            c22.disabled = false;
+            c31.disabled = false;
+            c32.disabled = false;
+            c33.disabled = false;
+
+            c31Val = Math.floor(Math.random() * difficulty);
+            c32Val = Math.floor(Math.random() * difficulty);
+            c33Val = Math.floor(Math.random() * difficulty);
+
+            c21Val = c31Val + c32Val;
+            c22Val = c32Val + c33Val;
+            c1Val = c21Val + c22Val;
+
+            if (Math.random() < 0.1) {
+                c31.value = c31Val;
+                c31.disabled = true;
+
+                c21.value = c21Val;
+                c22.value = c22Val;
+
+                c21.disabled = true;
+                c22.disabled = true;
+            } else if (Math.random() < 0.2) {
+                c32.value = c32Val;
+                c32.disabled = true;
+
+                c21.value = c21Val;
+                c22.value = c22Val;
+
+                c21.disabled = true;
+                c22.disabled = true;
+            } else if (Math.random() < 0.2) {
+                c33.value = c33Val;
+                c33.disabled = true;
+
+                c21.value = c21Val;
+                c22.value = c22Val;
+
+                c21.disabled = true;
+                c22.disabled = true;
+            } else if (Math.random() < 0.2) {
+                c31.value = c31Val;
+                c32.value = c32Val;
+
+                c31.disabled = true;
+                c32.disabled = true;
+
+                c22.value = c22Val;
+
+                c22.disabled = true;
+            } else if (Math.random() < 0.5) {
+                c32.value = c32Val;
+                c33.value = c33Val;
+
+                c32.disabled = true;
+                c33.disabled = true;
+
+                c21.value = c21Val;
+
+                c21.disabled = true;
+            } else {
+                c31.value = c31Val;
+                c33.value = c33Val;
+
+                c31.disabled = true;
+                c33.disabled = true;
+
+                if (Math.random() < 0.5) {
+                    c21.value = c21Val;
+                    c21.disabled = true;
+                } else {
+                    c22.value = c22Val;
+                    c22.disabled = true;
+                }
+
+                if (Math.random() < 0.5) {
+                    c1.value = c1Val;
+                    c1.disabled = true;
+                }
+            }
+        })
+
+        genBtn.click();
+
+        getRecords();
+
+    </script>
+</body>
+
+</html>
