@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <style>
+        body {
+            width: 100%;
+            font-size: 32px;
+        }
+
+        div {
+            width: 100%;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="btn"><button id="startZad" onclick="start();">Старт</button></div>
+
+    <div id="zad"></div>
+    <div id="res"></div>
+
+    <div id="chart"></div>
+
+    <script>
+        let result = { correct: 0, wrong: 0 };
+        let numbers = [];
+        let numMap = {
+            'нула': 0,
+            'едно': 1,
+            'две': 2,
+            'три': 3,
+            'четири': 4,
+            'пет': 5,
+            'шест': 6,
+            'седем': 7,
+            'осем': 8,
+            'девет': 9,
+            'десет': 10,
+        };
+        for (let i = 0; i <= 100; i++) {
+            numbers.push(i);
+        }
+        const grammar = `#JSGF V1.0; grammar numbers; public <numbers> = ${numbers.join(' | ')} ;`;
+
+        console.log(grammar);
+
+        const speechRecognitionList = new webkitSpeechGrammarList();
+        speechRecognitionList.addFromString(grammar, 1);
+
+        started = false;
+        function start() {
+            started = !started
+            if (started) {
+                say("Започваме!");
+                
+                zad();
+                document.getElementById("startZad").innerHTML = "Стоп";
+            } else {
+                document.getElementById("startZad").innerHTML = "Старт";
+            }
+        }
+        function say(text) {
+            let ut = new SpeechSynthesisUtterance();
+            ut.lang = "BG"
+            ut.text = text;
+            speechSynthesis.speak(ut);
+        }
+        function res(correct, val, res) {
+            console.log(val);
+
+            let ut = new SpeechSynthesisUtterance();
+            ut.lang = "BG"
+            if (correct) {
+                ut.text = "Вярно!";
+                result.correct++;
+            } else {
+                ut.text = "Грешно: " + res;
+                result.wrong++;
+            }
+            speechSynthesis.speak(ut);
+            document.getElementById("chart").innerHTML = "Вярно: " + result.correct + " Грешно: " + result.wrong;
+        }
+        function zad() {
+            document.getElementById("chart").innerHTML = "Вярно: " + result.correct + " Грешно: " + result.wrong;
+
+            let x = Math.floor(Math.random() * 10);
+            let y = Math.floor(Math.random() * 10);
+
+            document.getElementById("zad").innerHTML = x + " х " + y;
+            document.getElementById("res").innerHTML = "";
+
+            let ut = new SpeechSynthesisUtterance();
+            ut.lang = "BG"
+            ut.text = x + " по " + y;
+            speechSynthesis.speak(ut);
+
+            ut.onend = () => {
+                document.getElementById("res").innerHTML = "Отговори!";
+
+                let sr = new webkitSpeechRecognition();
+                sr.grammars = speechRecognitionList;
+
+                sr.start();
+                let correct = false;
+                let resulted = false
+                sr.onresult = (ev) => {
+                    let val = ev.results[0][0].transcript;
+                    let correct = (val == x * y) || (x * y == numMap[val]);
+                    document.getElementById("res").innerHTML = (correct ? "Вярно! " : "Грешно! ") + (x * y);
+                    resulted = true
+                    res(correct, val, x * y);
+                }
+                sr.onend = () => {
+                    setTimeout(() => {
+                        if (started) {
+                            if(!resulted) {
+                                res(false, null, x * y);
+                            }
+                            zad();
+                        }
+                        else {
+                            say("Край!");
+                            document.getElementById("res").innerHTML = "Край";
+                        }
+                    }, 1000);
+                }
+
+                setTimeout(() => {
+                    sr.stop();
+                }, 3000)
+            }
+        }
+    </script>
+</body>
+
+</html>
